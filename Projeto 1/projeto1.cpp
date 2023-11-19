@@ -16,7 +16,7 @@ int _X, _Y, _n;
 vector<Piece> *_marblePieces;
 
 void readInput() {
-    // Recolhe
+    // Recolhe as informações iniciais
     cin >> _X >> _Y >> _n;
     _marblePieces = new vector<Piece>[_n];
 
