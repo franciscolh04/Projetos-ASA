@@ -1,76 +1,60 @@
 #include <iostream>
 #include <vector>
-#include <chrono>
 
 using namespace std;
 
-struct Piece {
-    int length;
-    int width;
-    int price;
-
-    Piece(int a, int b, int p): length(a), width(b), price(p) {}
-};
-
+// Variáveis globais
 int _X, _Y, _n;
-vector<Piece> *_marblePieces;
+vector<vector<int> > _values;
 
 void readInput() {
-    // Recolhe as informações iniciais
-    cin >> _X >> _Y >> _n;
-    _marblePieces = new vector<Piece>[_n];
+    // Recolhe as informações iniciais e cria matriz de dimensões (X+1, Y+1)
+    scanf("%d %d %d", &_X, &_Y, &_n);
+    _values = vector< vector<int> > (_X + 1, vector<int>(_Y + 1, 0));
 
-    for(int i = 0; i < _n; i++) {
+    for (int i = 0; i < _n; i++) {
         int a, b, price;
         // Recolhe informações da peça
-        cin >> a >> b >> price;
+        scanf("%d %d %d", &a, &b, &price);
 
-        // Cria e insere nova peça no vetor de peças
-        _marblePieces->emplace_back(a, b, price);
-    }
-
-}
-
-int knapsack(int X, int Y, vector<Piece> &pieces) {
-    vector< vector<int> > k(X + 1, vector<int>(Y + 1, 0));
-
-    for(int x = 1; x <= X; x++) {
-        for(int y = 1; y <= Y; y++) {
-            k[x][y] = max(k[x - 1][y], k[x][y - 1]);
-            for (int i = 0; i < _n; ++i) {
-                // Se a peça já tiver o tamanho certo, associamos o seu valor
-                if ((pieces[i].length == x && pieces[i].width == y) ||
-                    (pieces[i].width == x && pieces[i].length == y)) {
-                    k[x][y] = pieces[i].price;
-                }
-                else {
-                    int value1 = 0, value2 = 0;
-
-                    if((pieces[i].length <= x && pieces[i].width <= y)) { // Sem rotação
-                        value1 = max(k[x][pieces[i].width] + k[x][y - pieces[i].width], k[pieces[i].length][y] + k[x - pieces[i].length][y]);
-                    }
-                    if((pieces[i].width <= x && pieces[i].length <= y)) { // Com rotação
-                        value2 = max(k[x][pieces[i].length] + k[x][y - pieces[i].length], k[pieces[i].width][y] + k[x - pieces[i].width][y]);
-                    }
-                    k[x][y] = max(k[x][y], max(value1, value2));
-                }
+        // Insere o valor da peça na entrada específica da matriz
+        if (a <= _X && b <= _Y) {
+            _values[a][b] = max(_values[a][b], price);
+            if (a <= _Y && b <= _X) { // Verifica se dá para rodar peça
+                _values[b][a] = max(_values[b][a], price);
             }
         }
     }
-    
-    return k[X][Y];
+}
+
+int calculateMaxValue() {
+    // Percorre cada célula da matriz e calcula o valor máximo
+    for(int x = 1; x <= _X; x++) {
+        for(int y = 1; y <= _Y; y++) {
+            int value1 = 0, value2 = 0;
+
+            // Corta horizontalmente
+            for(int j = 1; j <= y; j++) {
+                value1 = max(value1, _values[x][j] + _values[x][y - j]);
+            }
+
+            // Corta verticalmente
+            for(int i = 1; i <= x; i++) {
+                value2 = max(value2, _values[i][y] + _values[x - i][y]);
+            }
+
+            // Existe uma peça com estas dimensões
+            _values[x][y] = max(_values[x][y], max(value1, value2));
+        }
+    }
+    return _values[_X][_Y];
 }
 
 int main() {
     readInput();
-    auto start = chrono::high_resolution_clock::now();
 
-    int result = knapsack(_X, _Y, *_marblePieces);
-    cout << result << endl;
-
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    cout << "Runtime: " << duration.count() << " milliseconds" << endl;
+    int result = calculateMaxValue();
+    printf("%d\n", result);
 
     return 0;
 }
