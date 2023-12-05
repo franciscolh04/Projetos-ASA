@@ -34,16 +34,16 @@ int calculateMaxValue() {
             int value1 = 0, value2 = 0;
 
             // Corta horizontalmente
-            for(int j = 1; j <= y; j++) {
+            for(int j = 1; j < y; j++) {
                 value1 = max(value1, _values[x][j] + _values[x][y - j]);
             }
 
             // Corta verticalmente
-            for(int i = 1; i <= x; i++) {
+            for(int i = 1; i < x; i++) {
                 value2 = max(value2, _values[i][y] + _values[x - i][y]);
             }
 
-            // Existe uma peça com estas dimensões
+            // Associa o valor máximo entre os calculados e o atual 
             _values[x][y] = max(_values[x][y], max(value1, value2));
         }
     }
