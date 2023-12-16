@@ -1,7 +1,7 @@
 ## Private tests:
 17/17
 
-## Manual evaluation:
+## Report:
 2.5/3
 
 ## Final grade:
