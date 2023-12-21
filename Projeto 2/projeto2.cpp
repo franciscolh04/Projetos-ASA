@@ -11,7 +11,6 @@ vector<vector<int> > _graphT;       // Grafo invertido
 vector<int> _sccNumberCorrect;      // Vetor das SCCs dos vértices
 vector<int> _result;                // Vetor dos resultados
 
-
 void readInput() {
     // Recolhe as informações iniciais
     scanf("%d %d", &_n, &_m);
@@ -47,7 +46,6 @@ void dfs(int startNode, vector<bool>& visited, stack<int>& st) {
 
         for (int neighbor : _graph[currentNode]) {
             if (!visited[neighbor]) {
-                // Empilhe vizinhos não visitados e marque-os como visitados
                 s.push(neighbor);
                 visited[neighbor] = true;
                 hasUnvisitedNeighbor = true;
@@ -57,24 +55,26 @@ void dfs(int startNode, vector<bool>& visited, stack<int>& st) {
 
         if (!hasUnvisitedNeighbor) {
             s.pop();
-            st.push(currentNode);  // Empilhe o nó após visitar todos os vizinhos
+            st.push(currentNode);
         }
     }
 }
 
-int dfsT(int startNode, vector<bool>& visited, vector<int>& scc, int sscCounter, vector<bool>& resultDone) {
+// Realiza procura em profundidade primeiro no grafo transposto e calcula número de saltos
+int dfsT(int startNode, vector<bool>& visited, int sccCounter) {
     stack<int> s = stack<int>();
     s.push(startNode);
     int maxResult = 0;
     visited[startNode] = true;
+    _sccNumberCorrect[startNode] = sccCounter;
+    bool flagStartNode = false;
 
     while (!s.empty()) {
         int currentNode = s.top();
         bool hasUnvisitedNeighbor = false;
 
-        for (int neighbor : _graphT[currentNode]) { // -> travessia pelo grafo transposto
+        for (int neighbor : _graphT[currentNode]) {
             if (!visited[neighbor]) {
-                // Empilhe vizinhos não visitados e marque-os como visitados
                 s.push(neighbor);
                 visited[neighbor] = true;
                 hasUnvisitedNeighbor = true;
@@ -82,25 +82,22 @@ int dfsT(int startNode, vector<bool>& visited, vector<int>& scc, int sscCounter,
             }
         }
 
+        // Achou SCC do vértice atual
         if (!hasUnvisitedNeighbor) {
-            s.pop();
-            scc.push_back(currentNode);  // Empilhe o nó após visitar todos os vizinhos
-            _sccNumberCorrect[currentNode] = sscCounter;
-            _sccNumberCorrect[startNode] = sscCounter;
-            
-            for (int neighbor : _graphT[startNode]) {
-                if (_sccNumberCorrect[startNode] != _sccNumberCorrect[neighbor] && _sccNumberCorrect[neighbor] != 0) {
-                    _result[startNode] = max(_result[startNode],_result[neighbor] + 1);
-                }
-                else {
-                    _result[startNode] = max(_result[neighbor],_result[startNode]);
-                }
-                maxResult = max(maxResult, _result[startNode]);
+            // Calcula o número de saltos para o startNode 
+            if (!flagStartNode) {
+                s.push(startNode);
+                flagStartNode = true;
+                currentNode = s.top();
             }
 
-            if (currentNode != startNode) {
+            s.pop();
+            _sccNumberCorrect[currentNode] = sccCounter;
+            // Calcula o número de saltos para os restantes vértices
+            if(!s.empty()) {
                 for (int neighbor : _graphT[currentNode]) {
-                    if (_sccNumberCorrect[currentNode] != _sccNumberCorrect[neighbor] && _sccNumberCorrect[currentNode] != 0 && _sccNumberCorrect[neighbor] != 0) {
+                    if (_sccNumberCorrect[currentNode] != _sccNumberCorrect[neighbor] &&
+                        _sccNumberCorrect[currentNode] != 0 && _sccNumberCorrect[neighbor] != 0) {
                         _result[currentNode] = max(_result[currentNode],_result[neighbor] + 1);
                     }
                     else {
@@ -108,7 +105,7 @@ int dfsT(int startNode, vector<bool>& visited, vector<int>& scc, int sscCounter,
                     }
                     maxResult = max(maxResult, _result[currentNode]);
                 }
-            }
+            } 
         }
     }
     return maxResult;
@@ -129,10 +126,10 @@ int kosaraju() {
     // Reinicializa vetor de visitados
     fill(visited.begin(), visited.end(), false);
 
-    vector<bool> resultDone(_n + 1, false);
     vector<vector<int> > sccs;
     int maxJump = 0;
     int sccCounter = 0;
+
     // Processa os vértices na ordem da pilha
     while (!st.empty()) {
         int node = st.top();
@@ -140,9 +137,7 @@ int kosaraju() {
 
         if (!visited[node]) {
             sccCounter++;
-            vector<int> scc;
-            maxJump = max(maxJump, dfsT(node, visited, scc, sccCounter, resultDone));
-            sccs.push_back(scc);
+            maxJump = max(maxJump, dfsT(node, visited, sccCounter));
         }
     }
 
