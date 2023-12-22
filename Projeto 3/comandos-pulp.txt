@@ -1,0 +1,28 @@
+COMANDOS PuLP
+
+1 - Criar um problema
+prob = LpProblem("Bars", LpMaximize)
+
+2 - Criar as variáveis
+xs = LpVariable("xs", 0, None, LpInteger)
+
+3 - Função Objetivo
+prob += 5 * Xp + 3 * Xs, "objetivo"
+
+4 - Restrições
+prob += - Xp - Xs <= -2000, "restrição da qtd " (quantidade)
+
+-> Opcional: Veririca se está tudo bem
+prob.writeLP("myfile.txt")
+
+5 - Solução do problema
+prob.solve()
+
+Xp.varValue
+Xs.varValue
+
+Criar um dicionário de variáveis
+
+vars = LpVariable.dict("Bars", var_names, 0, None, LpInteger)
+
+prob += lpSum([vars[b] * tcs[b] for b in var_names]) <= TT, "restrição de tempo de cozedura"
